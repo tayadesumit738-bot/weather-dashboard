@@ -483,5 +483,5 @@ function showError(msg) {
 // Initialize application with a default city on page load
 // Set to user's local timezone auto (London used as default placeholder)
 document.addEventListener('DOMContentLoaded', () => {
-    getWeatherData('London');
+    getWeatherData('Mumbai');
 });
