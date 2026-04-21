@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <!-- SEO Best Practices -->
+    <meta name="description" content="A beautiful weather dashboard built with Vanilla JavaScript, HTML, and CSS using the Open-Meteo API.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Phosphor Icons for elegant UI icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body class="weather-clear"> <!-- Default background state -->
+    <div class="app-container">
+        <!-- Search Section -->
+        <header class="search-section">
+            <div class="search-wrapper">
+                <form id="search-form" class="search-form">
+                    <i class="ph ph-magnifying-glass search-icon"></i>
+                    <input type="text" id="city-input" placeholder="Search Indian city or anywhere..." autocomplete="off" required>
+                    <button type="submit" class="search-btn">Search</button>
+                </form>
+                <ul id="autocomplete-list" class="autocomplete-list hidden"></ul>
+            </div>
+            <div id="error-message" class="error-message hidden">City not found. Please try again.</div>
+        </header>
+
+
+        <!-- Main Weather Section -->
+        <main id="weather-main" class="weather-main hidden">
+            <div class="current-weather glass-panel">
+                <div class="weather-header">
+                    <h1 id="city-name">Loading...</h1>
+                    <p id="current-date">--</p>
+                </div>
+                <div class="weather-body">
+                    <div class="temp-container">
+                        <i id="current-icon" class="ph ph-sun main-icon"></i>
+                        <h2 id="current-temp">--°C</h2>
+                    </div>
+                    <!-- Prominent weather condition badge -->
+                    <div id="weather-badge" class="weather-badge">
+                        <span id="badge-dot" class="badge-dot"></span>
+                        <span id="badge-label">--</span>
+                    </div>
+                    <p id="weather-description" class="description">--</p>
+                </div>
+                <div class="weather-details">
+                    <div class="detail-item" id="humidity-detail">
+                        <i class="ph ph-drop"></i>
+                        <div>
+                            <p class="detail-label">Humidity</p>
+                            <p id="humidity" class="detail-value">--%</p>
+                        </div>
+                    </div>
+                    <div class="detail-item" id="wind-detail">
+                        <i class="ph ph-wind"></i>
+                        <div>
+                            <p class="detail-label">Wind Speed</p>
+                            <p id="wind-speed" class="detail-value">-- km/h</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecast Section -->
+            <section class="forecast-section" aria-labelledby="forecast-title">
+                <h3 id="forecast-title" class="forecast-title">5-Day Forecast</h3>
+                <div id="forecast-container" class="forecast-container">
+                    <!-- Forecast items injected via JS -->
+                </div>
+            </section>
+        </main>
+        
+        <div id="loading-spinner" class="loading-spinner hidden">
+            <i class="ph ph-spinner ph-spin"></i>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

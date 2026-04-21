@@ -1,0 +1,636 @@
+:root {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.75);
+    --glass-bg: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.25);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+    
+    /* Vivid Weather Gradients */
+    --gradient-clear:         linear-gradient(160deg, #f7b733 0%, #fc4a1a 40%, #1a73e8 100%);
+    --gradient-cloudy:        linear-gradient(160deg, #485563 0%, #29323c 60%, #485563 100%);
+    --gradient-rain:          linear-gradient(160deg, #0a0a2e 0%, #1a237e 40%, #0d47a1 100%);
+    --gradient-snow:          linear-gradient(160deg, #8ec5fc 0%, #e0c3fc 50%, #a9c9ff 100%);
+    --gradient-thunderstorm:  linear-gradient(160deg, #0a0a0a 0%, #1a0030 50%, #0d0d0d 100%);
+
+    /* Orb colours per theme */
+    --orb-clear:          rgba(255, 200, 50, 0.35);
+    --orb-cloudy:         rgba(180, 190, 200, 0.2);
+    --orb-rain:           rgba(30, 80, 200, 0.35);
+    --orb-snow:           rgba(200, 230, 255, 0.45);
+    --orb-thunderstorm:   rgba(120, 0, 200, 0.4);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* ═══════════════════════════════════════════
+   BACKGROUND IMAGE SYSTEM
+   Layer 0 (body)          – the raw photo
+   Layer 1 (body::before)  – blurred version of the photo + scale trick
+   Layer 2 (body::after)   – coloured atmospheric overlay
+   Layer 3 (.app-container)– glassmorphism UI on top
+═══════════════════════════════════════════ */
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow-x: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.8s ease;
+}
+
+/* Blurred photo layer */
+body::before {
+    content: '';
+    position: fixed;
+    inset: -20px;          /* slightly oversized so blur edges don't show */
+    z-index: 0;
+    background: inherit;
+    background-size: cover;
+    background-position: center;
+    filter: blur(14px) brightness(0.75);
+    transform: scale(1.05); /* prevent blur-edge artefacts */
+    transition: background-image 0.8s ease, filter 0.8s ease;
+}
+
+/* Atmospheric colour-tint overlay */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    transition: background 0.8s ease;
+}
+
+/* ── Clear / Sunny ── */
+body.weather-clear {
+    background-image: url('bg_clear.png');
+    color: #ffffff;
+}
+body.weather-clear::after {
+    background: linear-gradient(160deg, rgba(247,183,51,0.35) 0%, rgba(28,115,232,0.45) 100%);
+}
+
+/* ── Cloudy ── */
+body.weather-cloudy {
+    background-image: url('bg_cloudy.png');
+    color: #ffffff;
+}
+body.weather-cloudy::after {
+    background: linear-gradient(160deg, rgba(30,40,55,0.5) 0%, rgba(70,80,100,0.4) 100%);
+}
+
+/* ── Rain ── */
+body.weather-rain {
+    background-image: url('bg_rain.png');
+    color: #ffffff;
+}
+body.weather-rain::after {
+    background: linear-gradient(160deg, rgba(5,10,40,0.55) 0%, rgba(10,30,100,0.45) 100%);
+}
+
+/* ── Snow ── */
+body.weather-snow {
+    background-image: url('bg_snow.png');
+    color: #1a1a2e;
+}
+body.weather-snow::after {
+    background: linear-gradient(160deg, rgba(180,210,255,0.3) 0%, rgba(220,200,255,0.3) 100%);
+}
+
+/* ── Thunderstorm ── */
+body.weather-thunderstorm {
+    background-image: url('bg_thunderstorm.png');
+    color: #ffffff;
+}
+body.weather-thunderstorm::after {
+    background: linear-gradient(160deg, rgba(5,0,15,0.55) 0%, rgba(60,0,120,0.4) 100%);
+}
+
+/* ── Snow light-theme text overrides (day only) ── */
+body.weather-snow.is-day .detail-label,
+body.weather-snow.is-day #current-date,
+body.weather-snow.is-day .detail-item i {
+    color: rgba(26, 26, 46, 0.75);
+}
+body.weather-snow.is-day #city-input           { color: #1a1a2e; }
+body.weather-snow.is-day #city-input::placeholder { color: rgba(26, 26, 46, 0.5); }
+body.weather-snow.is-day .search-btn           { color: #1a1a2e; background: rgba(255,255,255,0.45); }
+body.weather-snow.is-day .glass-panel          { --glass-bg: rgba(255,255,255,0.35); --glass-border: rgba(255,255,255,0.55); }
+body.weather-snow.is-day .search-form          { --glass-bg: rgba(255,255,255,0.4);  --glass-border: rgba(255,255,255,0.55); }
+body.weather-snow.is-day .weather-badge        { color: #1a1a2e; background: rgba(255,255,255,0.45); }
+
+/* ═══════════════════════════════════════════
+   NIGHT MODE  (body gets .is-night class)
+   • Deepens blur layer with extra darkness + blue shift
+   • Replaces tint overlay with night-specific gradient
+   • Adds a CSS star shimmer on body::after
+═══════════════════════════════════════════ */
+
+/* Darken & blue-shift the blurred photo for all night themes */
+body.is-night::before {
+    filter: blur(14px) brightness(0.45) saturate(0.7) hue-rotate(200deg);
+}
+
+/* Night star shimmer layer — tiny radial dots scattered via repeating gradients */
+body.is-night::after {
+    background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 40%  8%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 60%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 75%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 35%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 35% 55%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(2px 2px at 48% 30%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(2px 2px at 85% 55%, rgba(255,255,255,0.4) 0%, transparent 100%);
+    animation: starTwinkle 4s ease-in-out infinite alternate;
+}
+
+@keyframes starTwinkle {
+    0%   { opacity: 0.6; }
+    50%  { opacity: 1;   }
+    100% { opacity: 0.7; }
+}
+
+/* Per-condition night tint overlays */
+body.weather-clear.is-night::after {
+    background-color: rgba(5, 5, 30, 0.55); /* deep midnight blue base */
+}
+body.weather-cloudy.is-night::after {
+    background-color: rgba(10, 12, 20, 0.65);
+}
+body.weather-rain.is-night::after {
+    background-color: rgba(2, 5, 25, 0.70);
+}
+body.weather-snow.is-night::after {
+    background-color: rgba(10, 15, 45, 0.50);
+}
+body.weather-thunderstorm.is-night::after {
+    background-color: rgba(5, 0, 20, 0.75);
+}
+
+/* Night indicator badge colour tweaks */
+body.is-night .weather-badge {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+body.weather-clear.is-night       .badge-dot { background: #c0c8ff; } /* moonlight blue */
+body.weather-snow.is-night        .badge-dot { background: #a5c8ff; }
+body.weather-thunderstorm.is-night .badge-dot { background: #d8b4fe; }
+
+/* Night label shown in header date */
+body.is-night #current-date::after {
+    content: '  🌙';
+}
+body.is-day #current-date::after {
+    content: '  ☀️';
+}
+
+/* Container */
+.app-container {
+    position: relative;
+    z-index: 2;            /* above the blur + tint pseudo-layers */
+    width: 100%;
+    max-width: 600px;
+    padding: 2rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.5s ease;
+}
+
+/* Search Form */
+.search-form {
+    display: flex;
+    align-items: center;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    padding: 0.6rem 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.search-form:focus-within {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Search wrapper — contains form + autocomplete list */
+.search-wrapper {
+    position: relative;
+}
+
+/* Autocomplete Dropdown */
+.autocomplete-list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    list-style: none;
+    background: rgba(20, 20, 40, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 18px;
+    overflow: hidden;
+    z-index: 100;
+    max-height: 260px;
+    overflow-y: auto;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+    animation: slideDown 0.18s ease;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+.autocomplete-list li {
+    padding: 0.85rem 1.4rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    transition: background 0.15s ease;
+}
+
+.autocomplete-list li:last-child { border-bottom: none; }
+
+.autocomplete-list li:hover,
+.autocomplete-list li.active {
+    background: rgba(255,255,255,0.15);
+    color: #ffffff;
+}
+
+.autocomplete-list li .city-flag {
+    font-size: 1.1rem;
+}
+
+.autocomplete-list li .city-state {
+    font-size: 0.8rem;
+    opacity: 0.6;
+    margin-left: auto;
+}
+
+.search-icon {
+    font-size: 1.4rem;
+    margin-right: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+#city-input {
+    flex: 1;
+    min-width: 0; /* Crucial for flexbox responsiveness */
+    background: transparent;
+    border: none;
+    outline: none;
+    color: inherit;
+    font-size: 1.1rem;
+    font-family: inherit;
+    padding: 0.5rem;
+}
+
+#city-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.search-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--glass-border);
+    color: inherit;
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.search-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.05);
+}
+
+.error-message {
+    color: #ff6b6b;
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: rgba(0,0,0,0.6);
+    padding: 0.8rem;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* Main Weather */
+.current-weather {
+    padding: 3rem 2.5rem;
+    text-align: center;
+}
+
+.weather-header {
+    margin-bottom: 2rem;
+}
+
+#city-name {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    letter-spacing: -0.5px;
+}
+
+#current-date {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.weather-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.temp-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.main-icon {
+    font-size: 6rem;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+#current-temp {
+    font-size: 6rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -2px;
+}
+
+.description {
+    font-size: 1rem;
+    font-weight: 400;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    opacity: 0.75;
+    margin-top: 0.25rem;
+}
+
+/* ── Weather Condition Badge ── */
+.weather-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 1.4rem;
+    margin-top: 1.2rem;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.badge-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(255,255,255,0.3); }
+    50%       { box-shadow: 0 0 0 6px rgba(255,255,255,0.1); }
+}
+
+/* Badge dot colour per weather type */
+body.weather-clear       .badge-dot { background: #FFD700; }
+body.weather-cloudy      .badge-dot { background: #aab4c8; }
+body.weather-rain        .badge-dot { background: #60a5fa; }
+body.weather-snow        .badge-dot { background: #93c5fd; }
+body.weather-thunderstorm .badge-dot { background: #c084fc; }
+
+/* Snow theme: dark text on badge */
+body.weather-snow .weather-badge { color: #1a1a2e; background: rgba(255,255,255,0.45); }
+
+/* Weather Details */
+.weather-details {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 2rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.detail-item i {
+    font-size: 2.2rem;
+    color: var(--text-secondary);
+}
+
+.detail-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.2rem;
+    text-align: left;
+}
+
+.detail-value {
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: left;
+}
+
+/* Forecast Section */
+.forecast-section {
+    margin-top: 1.5rem;
+}
+
+.forecast-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+    padding-left: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.forecast-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.9rem;
+}
+
+.forecast-card {
+    padding: 1.4rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    text-align: center;
+    cursor: default;
+    transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.forecast-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255,255,255,0.28);
+}
+
+.forecast-day {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.85;
+}
+
+.forecast-icon {
+    font-size: 2.2rem;
+}
+
+.forecast-temp-max {
+    font-weight: 700;
+    font-size: 1.15rem;
+}
+
+.forecast-temp-min {
+    font-weight: 400;
+    font-size: 0.9rem;
+    opacity: 0.65;
+    margin-top: -0.4rem;
+}
+
+/* Loading & Utils */
+.hidden {
+    display: none !important;
+}
+
+.loading-spinner {
+    text-align: center;
+    font-size: 4rem;
+    margin-top: 4rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive Tweaks */
+@media (max-width: 600px) {
+    .app-container {
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+    
+    .search-form {
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .search-icon {
+        font-size: 1.1rem;
+        margin-right: 0.4rem;
+        margin-left: 0.2rem;
+    }
+    
+    #city-input {
+        font-size: 0.95rem;
+        padding: 0.4rem;
+    }
+    
+    .search-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    #city-name { font-size: 2.2rem; }
+    .main-icon { font-size: 4rem; }
+    #current-temp { font-size: 4rem; }
+    .current-weather { padding: 1.5rem 1rem; }
+    
+    .weather-badge {
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+    }
+    
+    .forecast-container {
+        gap: 0.5rem;
+    }
+    
+    .forecast-card {
+        padding: 1rem 0.3rem;
+    }
+    
+    .forecast-day { font-size: 0.75rem; }
+    .forecast-icon { font-size: 1.8rem; }
+    .forecast-temp-max { font-size: 1rem; }
+}
+
+@media (max-width: 400px) {
+    .search-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .search-icon {
+        display: none; /* Hide icon on very small screens to save space */
+    }
+}
