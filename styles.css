@@ -230,6 +230,7 @@ body.is-day #current-date::after {
 .search-form {
     display: flex;
     align-items: center;
+    width: 100%;
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -249,6 +250,7 @@ body.is-day #current-date::after {
 /* Search wrapper — contains form + autocomplete list */
 .search-wrapper {
     position: relative;
+    width: 100%;
 }
 
 /* Autocomplete Dropdown */
@@ -332,6 +334,7 @@ body.is-day #current-date::after {
 }
 
 .search-btn {
+    flex-shrink: 0; /* Never squash the button */
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid var(--glass-border);
     color: inherit;
@@ -665,9 +668,18 @@ body.weather-snow .weather-badge { color: #1a1a2e; background: rgba(255,255,255,
 }
 
 @media (max-width: 400px) {
+    .app-container {
+        padding: 0.75rem;
+    }
+
+    .search-form {
+        padding: 0.3rem 0.5rem;
+    }
+
     .search-btn {
         padding: 0.5rem 0.8rem;
         font-size: 0.8rem;
+        transform: none !important; /* Disable hover scale to prevent clipping */
     }
     
     .search-icon {
